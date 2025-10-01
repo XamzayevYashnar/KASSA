@@ -26,9 +26,9 @@ SECRET_KEY = 'django-insecure-mx_gj5vp!%lfv=k@%em$8%_o-k@tv3bieq(g-eg%+g2e4k51z2
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'kassa-7b1b.onrender.com'
+    "kassa-7b1b.onrender.com",
     "127.0.0.1",
-    "localhost"
+    "localhost",
 ]
 
 
