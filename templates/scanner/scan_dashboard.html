@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avtomatik Skanerlash Tizimi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #2575fc;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+            outline: none;
+        }
+        
+        .auto-submit-info {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .auto-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .processing {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .recent-scans {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .recent-scans h3 {
+            margin-bottom: 15px;
+            color: #444;
+        }
+        
+        .scan-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .scan-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .scan-item:last-child {
+            border-bottom: none;
+        }
+        
+        .scan-code {
+            font-weight: 600;
+        }
+        
+        .scan-time {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-highlight {
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(37, 117, 252, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Avtomatik Skanerlash Tizimi</h1>
+            <p>Mahsulot kodini input maydoniga yozing - tizim darhol qayta ishlaydi</p>
+        </div>
+        
+        <form id="scanForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="productCode">Mahsulot kodi</label>
+                <input type="text" id="productCode" name="productCode" placeholder="Kodni yozing..." autofocus autocomplete="off">
+                <div class="auto-submit-info">
+                    <span class="auto-icon">⚡</span>
+                    <span>Kodni yozishni tugatgach, tizim darhol qayta ishlaydi</span>
+                </div>
+            </div>
+        </form>
+        
+        <div id="statusMessage" class="status"></div>
+        
+        <div class="recent-scans">
+            <h3>Oxirgi skanerlanganlar</h3>
+            <div class="scan-list" id="scanList">
+                <!-- Skanerlangan mahsulotlar bu yerda ko'rsatiladi -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('scanForm');
+            const productCodeInput = document.getElementById('productCode');
+            const statusMessage = document.getElementById('statusMessage');
+            const scanList = document.getElementById('scanList');
+            
+            let timeoutId = null;
+            let lastProcessedCode = '';
+            
+            // Input o'zgarishini kuzatish
+            productCodeInput.addEventListener('input', function(e) {
+                const productCode = productCodeInput.value.trim();
+                
+                // Agar input bo'sh bo'lsa, hech narsa qilma
+                if (!productCode) return;
+                
+                // Avvalgi timeoutni to'xtatish
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                
+                // Yangi timeout o'rnatish - foydalanuvchi yozishni tugatgach
+                timeoutId = setTimeout(function() {
+                    // Agar bu kod avval qayta ishlangan bo'lsa, qayta ishlamaslik
+                    if (productCode === lastProcessedCode) return;
+                    
+                    // Kodni qayta ishlash
+                    processCode(productCode);
+                }, 800); // 800ms kechikish - foydalanuvchi yozishni tugatishini kutish
+            });
+            
+            // Enter tugmasini bosganda ham ishlash
+            productCodeInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const productCode = productCodeInput.value.trim();
+                    
+                    if (productCode) {
+                        processCode(productCode);
+                    }
+                }
+            });
+            
+            // Kodni qayta ishlash funksiyasi
+            function processCode(productCode) {
+                if (!productCode) {
+                    showStatus('Iltimos, mahsulot kodini kiriting!', 'error');
+                    return;
+                }
+                
+                // Inputni animatsiya bilan ajratib ko'rsatish
+                productCodeInput.classList.add('input-highlight');
+                setTimeout(() => {
+                    productCodeInput.classList.remove('input-highlight');
+                }, 500);
+                
+                // Ma'lumotlarni serverga yuborish
+                submitToServer(productCode);
+                
+                // Oxirgi qayta ishlangan kodni saqlash
+                lastProcessedCode = productCode;
+            }
+            
+            // ============================
+            // YANGI: Sizning JavaScript kodingiz
+            // ============================
+            
+            function submitToServer(productCode) {
+                showStatus("Ma'lumotlar qayta ishlanmoqda...", "processing");
+
+                fetch("/submit/", {
+                    method: "POST",
+                    headers: { 
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ productCode: productCode })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        showStatus(data.message, "success");
+                        addToScanList(productCode);
+
+                        setTimeout(() => {
+                            productCodeInput.value = "";
+                            productCodeInput.focus();
+                            lastProcessedCode = "";
+                        }, 1000);
+                    } else {
+                        showStatus(data.message, "error");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showStatus("Xatolik yuz berdi, qaytadan urinib ko'ring.", "error");
+                });
+            }
+
+            // Django CSRF token olish funksiyasi
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== "") {
+                    const cookies = document.cookie.split(";");
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            // ============================
+            // Avvalgi funksiyalar
+            // ============================
+            
+            // Status xabarini ko'rsatish
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + type;
+                statusMessage.style.display = 'block';
+                
+                // 4 soniyadan so'ng xabarni yashirish
+                setTimeout(function() {
+                    statusMessage.style.display = 'none';
+                }, 4000);
+            }
+            
+            // Skanerlangan ro'yxatga qo'shish
+            function addToScanList(productCode) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('uz-UZ');
+                
+                const scanItem = document.createElement('div');
+                scanItem.className = 'scan-item';
+                scanItem.innerHTML = `
+                    <span class="scan-code">${productCode}</span>
+                    <span class="scan-time">${timeString}</span>
+                `;
+                
+                scanList.insertBefore(scanItem, scanList.firstChild);
+                
+                // Agar ro'yxat juda uzun bo'lsa, eng eskisini o'chirish
+                if (scanList.children.length > 10) {
+                    scanList.removeChild(scanList.lastChild);
+                }
+            }
+            
+            // Dastlabki skanerlangan ma'lumotlarni ko'rsatish (agar mavjud bo'lsa)
+            const initialScans = [
+                { code: '1234567890123', time: '10:15:23' },
+                { code: '9876543210987', time: '10:12:45' },
+                { code: '4561237890456', time: '10:08:12' }
+            ];
+            
+            initialScans.forEach(scan => {
+                const scanItem = document.createElement('div');
+                scanItem.className = 'scan-item';
+                scanItem.innerHTML = `
+                    <span class="scan-code">${scan.code}</span>
+                    <span class="scan-time">${scan.time}</span>
+                `;
+                scanList.appendChild(scanItem);
+            });
+            
+            // Input maydoniga fokus qilish
+            productCodeInput.focus();
+        });
+    </script>
+</body>
+</html>
